@@ -33,6 +33,8 @@ morphLeaves f p t = case t of
 -- 4) Return the tree
 step :: ProofTree -> ProofTree
 step t = case used t of
+
+    -- This branch has been used, so step its children if applicable
     True -> case t of 
         Leaf { used = _, prop = _ } ->
             t
@@ -41,8 +43,13 @@ step t = case used t of
         Branch1 { used = _, prop = p, left = l } ->
             Branch1 { used = True , prop = p , left = step l }
 
+    -- Otherwise
     False -> case isAtom t of 
+        
+        -- If atomic, there are no rules to apply, so mark it as hit
         True -> setUsed t
+
+        -- If not, apply the rule associated with its proposition
         False -> case t of 
             Leaf { used = u, prop = p } ->
                 setUsed $ morphLeaves propToTree p t
@@ -82,8 +89,8 @@ collapseNegations p = p
 
 isAtom :: ProofTree -> Bool
 isAtom t = case prop t of 
-    (PVar _) -> True
-    (PNegate (PVar _)) -> True
+    PVar _ -> True
+    PNegate (PVar _) -> True
     _ -> False
 
 initTree :: Prop -> ProofTree
