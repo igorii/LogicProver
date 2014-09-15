@@ -2,7 +2,7 @@ module Main where
 
 import LogicProver.Logic
 
-itree = initTree (PAnd (PVar "p") (PVar "q"))
+itree = initTree (POr (PVar "p") (PAnd (PVar "p") (PVar "q")))
 
 main :: IO ()
-main = putStrLn . show $ step $ step itree
+main = putStrLn . show $ solveTree itree

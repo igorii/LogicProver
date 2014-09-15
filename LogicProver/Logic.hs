@@ -45,7 +45,7 @@ step t = case used t of
 
     -- Otherwise
     False -> case isAtom t of 
-        
+
         -- If atomic, there are no rules to apply, so mark it as hit
         True -> setUsed t
 
@@ -57,6 +57,18 @@ step t = case used t of
                 setUsed $ morphLeaves propToTree p t
             Branch2 { used = u, prop = p, left = l, right = r } ->
                 setUsed $ morphLeaves propToTree p t
+
+solveTree :: ProofTree -> ProofTree
+solveTree t = case treeSolved t of
+    True -> t
+    False -> solveTree $ step t
+
+-- Returns true if the tree has been fully applied, false otherwise
+treeSolved :: ProofTree -> Bool
+treeSolved t = case t of
+    Leaf { used = u, prop = _ } -> u
+    Branch1 { used = u, prop = _, left = l } -> u && treeSolved l
+    Branch2 { used = u, prop = _, left = l, right = r } -> u && treeSolved l && treeSolved r
 
 propToTree :: Prop -> ProofTree -> ProofTree
 
