@@ -17,11 +17,28 @@ data ProofTree = Branch2 { used :: Bool, prop :: Prop, left :: ProofTree, right 
                | Leaf    { used :: Bool, prop :: Prop }
                deriving (Show, Eq)
 
+-- Extract the variable string from an atomic proposition
 getVar :: Prop -> String
 getVar (PVar p) = p
 getVar (PNegate (PVar p)) = p
 getVar _ = ""
 
+-- Return true if the proposition is valid: there is some combination of truth
+-- values for all of the atomic variables that allow the proposition to be true.
+isValid :: Prop -> Bool
+isValid = isConsitent . consitenctList . solveProp
+
+-- Return true if all variables are consitent
+isConsitent :: [(String, Bool)] -> Bool
+isConsitent = all (\(k,v) -> v)
+
+-- Create an association list of variable name to consitency
+consitenctList :: ProofTree -> [(String, Bool)]
+consitenctList t = Prelude.map gather $ toList $ getAtoms t where
+    gather :: (String, [Prop]) -> (String, Bool)
+    gather (k, l) = (k, all (\x -> x == head l) l)
+
+-- Create a dictionary of variable names to atomic presence in the prooftree
 getAtoms :: ProofTree -> Map String [Prop]
 getAtoms t = getAtoms' t Data.Map.empty where
     getAtoms' t m = if isAtom t
