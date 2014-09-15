@@ -15,10 +15,7 @@ data ProofTree = Branch2 { used :: Bool, prop :: Prop, left :: ProofTree, right 
                | Leaf    { used :: Bool, prop :: Prop }
                deriving (Show, Eq)
 
--- Return whether there are unapplied rules in the prooftree
-done :: ProofTree -> Bool
-done = undefined
-
+-- Apply a function to each leaf of a proof tree
 morphLeaves :: (Prop -> ProofTree -> ProofTree) -> Prop -> ProofTree -> ProofTree
 morphLeaves f p t = case t of 
     Leaf { used = _, prop = _ } -> f p t
@@ -35,7 +32,7 @@ step :: ProofTree -> ProofTree
 step t = case used t of
 
     -- This branch has been used, so step its children if applicable
-    True -> case t of 
+    True -> case t of
         Leaf { used = _, prop = _ } ->
             t
         Branch2 {used = _, prop = p, left = l, right = r} ->
@@ -44,13 +41,13 @@ step t = case used t of
             Branch1 { used = True , prop = p , left = step l }
 
     -- Otherwise
-    False -> case isAtom t of 
+    False -> case isAtom t of
 
         -- If atomic, there are no rules to apply, so mark it as hit
         True -> setUsed t
 
         -- If not, apply the rule associated with its proposition
-        False -> case t of 
+        False -> case t of
             Leaf { used = u, prop = p } ->
                 setUsed $ morphLeaves propToTree p t
             Branch1 { used = u, prop = p, left = l } ->
@@ -58,9 +55,12 @@ step t = case used t of
             Branch2 { used = u, prop = p, left = l, right = r } ->
                 setUsed $ morphLeaves propToTree p t
 
+-- Turn a proposition into a prooftree and apply all rules to it
 solveProp :: Prop -> ProofTree
 solveProp = solveTree . initTree
 
+-- Given a proof tree, proceed to iteratively apply all rules to it until there
+-- are no more rules to apply
 solveTree :: ProofTree -> ProofTree
 solveTree t = case treeSolved t of
     True -> t
@@ -73,7 +73,14 @@ treeSolved t = case t of
     Branch1 { used = u, prop = _, left = l } -> u && treeSolved l
     Branch2 { used = u, prop = _, left = l, right = r } -> u && treeSolved l && treeSolved r
 
+-- Given a proposition and a prooftree, apply the rule of the proposition on a 
+-- new proof tree that has as its root the given proposition
 propToTree :: Prop -> ProofTree -> ProofTree
+
+-- (not (not P))
+propToTree p'@(PNegate (PNegate _)) (Leaf {used = u, prop = p }) =
+    Branch1 { used = u , prop = p
+            , left = Leaf { used = False, prop = collapseNegations p'} }
 
 -- P /\ Q
 propToTree (PAnd p1 p2) (Leaf {used = u, prop = p }) =
@@ -102,15 +109,19 @@ collapseNegations :: Prop -> Prop
 collapseNegations (PNegate (PNegate p)) = collapseNegations p
 collapseNegations p = p
 
+-- Return true is there is no rule to apply on the given node
 isAtom :: ProofTree -> Bool
-isAtom t = case prop t of 
+isAtom t = case prop t of
     PVar _ -> True
     PNegate (PVar _) -> True
     _ -> False
 
+-- Given a propsition, create a proof tree by negating the proposition. This is
+-- to facilitate a proof by contradication of the validity of the proposition.
 initTree :: Prop -> ProofTree
 initTree p = Leaf False (PNegate p)
 
+-- Set the `used` flag on a prooftree node
 setUsed (Branch2 _ p b1 b2) = Branch2 True p b1 b2
 setUsed (Branch1 _ p b) = Branch1 True p b
 setUsed (Leaf _ p) = Leaf True p
