@@ -1,5 +1,7 @@
 module LogicProver.Logic where
 
+import Data.Map
+
 -- The type of propositions
 data Prop = PVar String
           | PNegate Prop
@@ -14,6 +16,31 @@ data ProofTree = Branch2 { used :: Bool, prop :: Prop, left :: ProofTree, right 
                | Branch1 { used :: Bool, prop :: Prop, left :: ProofTree }
                | Leaf    { used :: Bool, prop :: Prop }
                deriving (Show, Eq)
+
+getVar :: Prop -> String
+getVar (PVar p) = p
+getVar (PNegate (PVar p)) = p
+getVar _ = ""
+
+getAtoms :: ProofTree -> Map String [Prop]
+getAtoms t = getAtoms' t Data.Map.empty where
+    getAtoms' t m = if isAtom t
+        then let var = getVar $ prop t in
+            case Data.Map.lookup var m of
+                Nothing -> case t of
+                    Leaf { used = _, prop = p } -> insert var [p] m
+                    Branch1 { used = _, prop = p, left = l } -> getAtoms' l $ insert var [p] m
+                    Branch2 { used = _, prop = p, left = l, right = r } ->
+                        unionWith (++) (getAtoms' l $ insert var [p] m) (getAtoms' r $ insert var [p] m)
+                Just past -> case t of
+                    Leaf { used = _, prop = p } -> insert var (p:past) m
+                    Branch1 { used = _, prop = p, left = l } -> getAtoms' l $ insert var (p:past) m
+                    Branch2 { used = _, prop = p, left = l, right = r } ->
+                        unionWith (++) (getAtoms' l $ insert var (p:past) m) (getAtoms' r $ insert var (p:past) m)
+        else case t of 
+            Leaf { used = _, prop = p } -> m
+            Branch1 { used = _, prop = p, left = l } -> getAtoms' l m
+            Branch2 { used = _, prop = p, left = l, right = r } -> unionWith (++) (getAtoms' l m) (getAtoms' r m)
 
 -- Apply a function to each leaf of a proof tree
 morphLeaves :: (Prop -> ProofTree -> ProofTree) -> Prop -> ProofTree -> ProofTree
