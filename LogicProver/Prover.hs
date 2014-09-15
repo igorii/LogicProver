@@ -142,17 +142,17 @@ propToTree p'@(PNegate (PNegate _)) (Leaf {used = u, prop = p }) =
     Branch1 { used = u , prop = p
             , left = Leaf { used = False, prop = collapseNegations p'} }
 
--- P /\ Q
+-- P and Q
 propToTree (PAnd p1 p2) (Leaf {used = u, prop = p }) =
     Branch1 { used = u , prop = p
             , left = Branch1 { used = False , prop = p1
                              , left = Leaf { used = False , prop = p2 } } }
 
--- ~(P /\ Q)
+-- ~(P and Q)
 propToTree (PNegate (PAnd p1 p2)) l =
     propToTree (POr (PNegate p1) (PNegate p2)) l
 
--- (P \/ Q)
+-- (P or Q)
 propToTree (POr p1 p2) (Leaf {used = u, prop = p }) =
     Branch2 { used  = u
             , prop  = p
@@ -160,12 +160,18 @@ propToTree (POr p1 p2) (Leaf {used = u, prop = p }) =
             , right = Leaf { used = False, prop = p2 }
             }
 
--- ~(P \/ Q)
+-- ~(P or Q)
 propToTree (PNegate (POr p1 p2)) l =
     propToTree (PAnd (PNegate p1) (PNegate p2)) l
 
---propToTree (PCond p1 p2) (Leaf { used = u, prop = p }) =
---    Branch1
+-- P implies Q
+propToTree (PCond p1 p2) l =
+    propToTree (POr (PNegate p1) p2) l
+
+-- ~(P implies Q)
+propToTree (PNegate (PCond p1 p2)) l =
+    propToTree (PAnd p1 (PNegate p2)) l
+
 
 -- Collapse all stacked negations
 collapseNegations :: Prop -> Prop
