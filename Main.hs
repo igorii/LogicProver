@@ -14,5 +14,5 @@ longValid = PCond (PAnd (PCond (PVar "A") (PVar "B")) (PCond (PVar "A") (PVar "C
     (PCond (PVar "A") (PAnd (PVar "B") (PVar "C")))
 
 main :: IO ()
-main = putStrLn . show $ [True, True, True, False, False] == 
+main = putStrLn . show $ [True, True, True, False, False] ==
     map isValid [longValid, validProp, validProp2, invalidProp, invalidProp2]

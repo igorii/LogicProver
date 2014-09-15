@@ -4,9 +4,9 @@ import qualified Data.Map as M
 import LogicProver.Lang
 
 -- The type of the proof tree used for determining the validity of a proposition
-data ProofTree = Branch2 { used :: Bool, prop :: Prop, left :: ProofTree, right :: ProofTree }
+data ProofTree = Leaf    { used :: Bool, prop :: Prop }
                | Branch1 { used :: Bool, prop :: Prop, left :: ProofTree }
-               | Leaf    { used :: Bool, prop :: Prop }
+               | Branch2 { used :: Bool, prop :: Prop, left :: ProofTree, right :: ProofTree }
                deriving (Show, Eq)
 
 -- Return true if the proposition is valid: there is some combination of truth
@@ -92,10 +92,10 @@ step t = case used t of
     True -> case t of
         Leaf { used = _, prop = _ } ->
             t
-        Branch2 {used = _, prop = p, left = l, right = r} ->
-            Branch2 { used  = True , prop  = p , left  = step l , right = step r }
         Branch1 { used = _, prop = p, left = l } ->
             Branch1 { used = True , prop = p , left = step l }
+        Branch2 {used = _, prop = p, left = l, right = r} ->
+            Branch2 { used  = True , prop  = p , left  = step l , right = step r }
 
     -- Otherwise
     False -> case isAtom t of
