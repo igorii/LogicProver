@@ -1,6 +1,7 @@
 module Main where
 
-import LogicProver.Logic
+import LogicProver.Lang
+import LogicProver.Prover
 
 validProp = POr (PVar "p") (PNegate (PVar "p"))
 invalidProp = PAnd (PVar "p") (PNegate (PVar "p"))
