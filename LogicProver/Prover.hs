@@ -55,7 +55,6 @@ getAtoms t = getAtoms' t M.empty where
                         getAtoms' l $ M.insert var [p] m
                     Branch2 { used = _, prop = p, left = l, right = r } ->
                         (getAtoms' l $ M.insert var [p] m) ++ (getAtoms' r $ M.insert var [p] m)
-                        --unionWith (++) (getAtoms' l $ insert var [p] m) (getAtoms' r $ insert var [p] m)
 
                 -- Otherwise, append it to the current entry for the variable
                 Just past -> case t of
@@ -65,7 +64,6 @@ getAtoms t = getAtoms' t M.empty where
                         getAtoms' l $ M.insert var (p:past) m
                     Branch2 { used = _, prop = p, left = l, right = r } ->
                         (getAtoms' l $ M.insert var (p:past) m) ++ (getAtoms' r $ M.insert var (p:past) m)
-                        --unionWith (++) (getAtoms' l $ insert var (p:past) m) (getAtoms' r $ insert var (p:past) m)
 
         -- If the current node is not atomic, skip the entry and continue
         else case t of 
@@ -73,7 +71,6 @@ getAtoms t = getAtoms' t M.empty where
             Branch1 { used = _, prop = p, left = l } -> getAtoms' l m
             Branch2 { used = _, prop = p, left = l, right = r } -> 
                 (getAtoms' l m) ++ (getAtoms' r m)
-                --unionWith (++) (getAtoms' l m) (getAtoms' r m)
 
 -- Apply a function to each leaf of a proof tree
 morphLeaves :: (Prop -> ProofTree -> ProofTree) -> Prop -> ProofTree -> ProofTree
