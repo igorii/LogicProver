@@ -1,4 +1,6 @@
-module LogicProver.Logic where
+module LogicProver.Logic (isValid, 
+                          Prop (PVar, PNegate, PAnd, POr, PCond)) 
+    where
 
 import Data.Map
 
@@ -26,20 +28,34 @@ getVar _ = ""
 -- Return true if the proposition is valid: there is some combination of truth
 -- values for all of the atomic variables that allow the proposition to be true.
 isValid :: Prop -> Bool
-isValid = isConsitent . consitenctList . solveProp
+isValid = allClosed . collapseBranches . openBranches . solveProp
 
 -- Return true if all variables are consitent
-isConsitent :: [(String, Bool)] -> Bool
-isConsitent = all (\(k,v) -> v)
+isConsistent :: [(String, Bool)] -> Bool
+isConsistent = all (\(k,v) -> v)
+
+-- Takes a list of True for an open branch and False for a closed branch
+allClosed :: [Bool]-> Bool
+allClosed = all (\x -> not x)
+
+-- Collapse a branch of the proof tree (a list of vars to consistency) into a
+-- single consistency value.
+collapseBranches :: [[(String, Bool)]] -> [Bool]
+collapseBranches l = Prelude.map isConsistent l
+
+-- Create a list where each element in a branch of the proof tree. Each subelement
+-- is a variable appearing in the branch and its consistency within the branch.
+openBranches :: ProofTree -> [[(String, Bool)]]
+openBranches t = Prelude.map isOpenBranch $ getAtoms t
 
 -- Create an association list of variable name to consitency
-consitenctList :: ProofTree -> [(String, Bool)]
-consitenctList t = Prelude.map gather $ toList $ getAtoms t where
+isOpenBranch :: Map String [Prop] -> [(String, Bool)]
+isOpenBranch m = Prelude.map gather $ toList $ m where
     gather :: (String, [Prop]) -> (String, Bool)
     gather (k, l) = (k, all (\x -> x == head l) l)
 
 -- Create a dictionary of variable names to atomic presence in the prooftree
-getAtoms :: ProofTree -> Map String [Prop]
+getAtoms :: ProofTree -> [ Map String [Prop] ]
 getAtoms t = getAtoms' t Data.Map.empty where
     getAtoms' t m = if isAtom t
 
@@ -49,23 +65,31 @@ getAtoms t = getAtoms' t Data.Map.empty where
 
                 -- If it does not exist in the dictionary, add it
                 Nothing -> case t of
-                    Leaf { used = _, prop = p } -> insert var [p] m
-                    Branch1 { used = _, prop = p, left = l } -> getAtoms' l $ insert var [p] m
+                    Leaf { used = _, prop = p } ->
+                        (insert var [p] m) : []
+                    Branch1 { used = _, prop = p, left = l } ->
+                        getAtoms' l $ insert var [p] m
                     Branch2 { used = _, prop = p, left = l, right = r } ->
-                        unionWith (++) (getAtoms' l $ insert var [p] m) (getAtoms' r $ insert var [p] m)
+                        (getAtoms' l $ insert var [p] m) ++ (getAtoms' r $ insert var [p] m)
+                        --unionWith (++) (getAtoms' l $ insert var [p] m) (getAtoms' r $ insert var [p] m)
 
                 -- Otherwise, append it to the current entry for the variable
                 Just past -> case t of
-                    Leaf { used = _, prop = p } -> insert var (p:past) m
-                    Branch1 { used = _, prop = p, left = l } -> getAtoms' l $ insert var (p:past) m
+                    Leaf { used = _, prop = p } -> 
+                        (insert var (p:past) m) : []
+                    Branch1 { used = _, prop = p, left = l } ->
+                        getAtoms' l $ insert var (p:past) m
                     Branch2 { used = _, prop = p, left = l, right = r } ->
-                        unionWith (++) (getAtoms' l $ insert var (p:past) m) (getAtoms' r $ insert var (p:past) m)
+                        (getAtoms' l $ insert var (p:past) m) ++ (getAtoms' r $ insert var (p:past) m)
+                        --unionWith (++) (getAtoms' l $ insert var (p:past) m) (getAtoms' r $ insert var (p:past) m)
 
         -- If the current node is not atomic, skip the entry and continue
         else case t of 
-            Leaf { used = _, prop = p } -> m
+            Leaf { used = _, prop = p } -> [m]
             Branch1 { used = _, prop = p, left = l } -> getAtoms' l m
-            Branch2 { used = _, prop = p, left = l, right = r } -> unionWith (++) (getAtoms' l m) (getAtoms' r m)
+            Branch2 { used = _, prop = p, left = l, right = r } -> 
+                (getAtoms' l m) ++ (getAtoms' r m)
+                --unionWith (++) (getAtoms' l m) (getAtoms' r m)
 
 -- Apply a function to each leaf of a proof tree
 morphLeaves :: (Prop -> ProofTree -> ProofTree) -> Prop -> ProofTree -> ProofTree
@@ -155,6 +179,9 @@ propToTree (POr p1 p2) (Leaf {used = u, prop = p }) =
 -- ~(P \/ Q)
 propToTree (PNegate (POr p1 p2)) l =
     propToTree (PAnd (PNegate p1) (PNegate p2)) l
+
+--propToTree (PCond p1 p2) (Leaf { used = u, prop = p }) =
+--    Branch1
 
 -- Collapse all stacked negations
 collapseNegations :: Prop -> Prop

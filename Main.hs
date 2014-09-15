@@ -2,7 +2,7 @@ module Main where
 
 import LogicProver.Logic
 
-validProp = POr (PVar "p") (PAnd (PVar "p") (PVar "q"))
+validProp = POr (PVar "p") (PNegate (PVar "p"))
 invalidProp = PAnd (PVar "p") (PNegate (PVar "p"))
 
 main :: IO ()
