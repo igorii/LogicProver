@@ -42,18 +42,26 @@ consitenctList t = Prelude.map gather $ toList $ getAtoms t where
 getAtoms :: ProofTree -> Map String [Prop]
 getAtoms t = getAtoms' t Data.Map.empty where
     getAtoms' t m = if isAtom t
+
+        -- If the current node is an atom, then add it to the dictionary
         then let var = getVar $ prop t in
             case Data.Map.lookup var m of
+
+                -- If it does not exist in the dictionary, add it
                 Nothing -> case t of
                     Leaf { used = _, prop = p } -> insert var [p] m
                     Branch1 { used = _, prop = p, left = l } -> getAtoms' l $ insert var [p] m
                     Branch2 { used = _, prop = p, left = l, right = r } ->
                         unionWith (++) (getAtoms' l $ insert var [p] m) (getAtoms' r $ insert var [p] m)
+
+                -- Otherwise, append it to the current entry for the variable
                 Just past -> case t of
                     Leaf { used = _, prop = p } -> insert var (p:past) m
                     Branch1 { used = _, prop = p, left = l } -> getAtoms' l $ insert var (p:past) m
                     Branch2 { used = _, prop = p, left = l, right = r } ->
                         unionWith (++) (getAtoms' l $ insert var (p:past) m) (getAtoms' r $ insert var (p:past) m)
+
+        -- If the current node is not atomic, skip the entry and continue
         else case t of 
             Leaf { used = _, prop = p } -> m
             Branch1 { used = _, prop = p, left = l } -> getAtoms' l m
