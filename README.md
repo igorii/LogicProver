@@ -27,5 +27,6 @@ Underlying this system is a basic proof-tree mechanism. See [analytic tableaux](
 
 ### TODO
 
-* Complete ruleset
 * Parser
+* Improve output 
+    * current only valid/invalid, but required information for specific success/fail cases is available -- see [Usage](Usage)
