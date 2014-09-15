@@ -58,6 +58,9 @@ step t = case used t of
             Branch2 { used = u, prop = p, left = l, right = r } ->
                 setUsed $ morphLeaves propToTree p t
 
+solveProp :: Prop -> ProofTree
+solveProp = solveTree . initTree
+
 solveTree :: ProofTree -> ProofTree
 solveTree t = case treeSolved t of
     True -> t
