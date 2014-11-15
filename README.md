@@ -16,11 +16,8 @@ $ logic “p and ~p”
 If used on a valid statement, the executable would respond with the valid cases:
 
 ```
-$ logic “p or q”
-    Valid:  p  q
-            p ~q
-           ~p  q
-        
+$ logic “p -> p”
+    Valid
 ```
 
 Underlying this system is a basic proof-tree mechanism. See [analytic tableaux](http://en.wikipedia.org/wiki/Method_of_analytic_tableaux).
