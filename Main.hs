@@ -5,7 +5,8 @@ import LogicProver.Prover
 import LogicProver.Parse
 
 validProp = "p impl p"
+
 main :: IO ()
-main = putStrLn . show $ case parseString prop validProp of 
-    Right x -> isValid x
+main = putStrLn . show $ case parseString prop validProp of
+    Right x  -> isValid x
     Left err -> False
