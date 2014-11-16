@@ -14,7 +14,7 @@ languageDef =
   emptyDef { Token.commentLine = "--"
            , Token.identStart = letter
            , Token.identLetter = alphaNum
-           , Token.reservedOpNames = [ "!"
+           , Token.reservedOpNames = [ "~"
                                      , "and"
                                      , "or"
                                      , "impl"
@@ -32,7 +32,7 @@ reserved = Token.reserved lexer
 reservedOp = Token.reservedOp lexer
 parens = Token.parens lexer
 
-opTable = [ [Prefix (reservedOp "!" >> return PNegate)]
+opTable = [ [Prefix (reservedOp "~" >> return PNegate)]
           , [Infix  (reservedOp "and" >> return PAnd) AssocLeft]
           , [Infix  (reservedOp "or" >> return POr) AssocLeft]
           , [Infix  (reservedOp "impl" >> return PCond) AssocLeft]
