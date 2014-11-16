@@ -15,7 +15,7 @@ languageDef =
            , Token.identStart = letter
            , Token.identLetter = alphaNum
            , Token.reservedOpNames = [ "~" , "and" , "or" , "impl" ]
-           , Token.reservedNames = [ "and" , "or" , "impl" ] 
+           , Token.reservedNames = [ "and" , "or" , "->" ] 
            }
 
 lexer = Token.makeTokenParser languageDef
@@ -27,7 +27,7 @@ parens     = Token.parens lexer
 opTable    = [ [Prefix (reservedOp "~"    >> return PNegate)]
              , [Infix  (reservedOp "and"  >> return PAnd) AssocLeft]
              , [Infix  (reservedOp "or"   >> return POr) AssocLeft]
-             , [Infix  (reservedOp "impl" >> return PCond) AssocLeft]
+             , [Infix  (reservedOp "->"   >> return PCond) AssocLeft]
              ]
 
 prop :: Parser Prop
