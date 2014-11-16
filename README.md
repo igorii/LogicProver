@@ -13,10 +13,10 @@ $ logic “p and ~p”
         Contradiction: found both ‘p’ and ‘~p’
 ```
 
-If used on a valid statement, the executable would respond with the valid cases:
+If used on a valid statement, the executable would respond with the valid cases. For example, take the transitivity of the conditional:
 
 ```
-$ logic “p -> p”
+$ logic “((p -> q) and (q -> r)) -> (p -> r)”
     Valid
 ```
 
