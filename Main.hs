@@ -7,8 +7,6 @@ import LogicProver.Lang
 import LogicProver.Prover
 import LogicProver.Parse
 
-validProp = "p impl p"
-
 eval str =
     show $ case parseString prop str of
         Right x  -> isValid x
